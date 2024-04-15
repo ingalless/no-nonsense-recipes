@@ -9,10 +9,21 @@ extern crate rocket;
 
 mod views;
 
+#[derive(Clone)]
 pub struct Recipe {
     _path: PathBuf,
     title: String,
     content: String,
+}
+
+impl Recipe {
+    pub fn to_html(self: &Self) -> String {
+        let mut options = Options::default();
+        options.parse.relaxed_tasklist_matching = true;
+        options.extension.tasklist = true;
+        options.extension.front_matter_delimiter = Some("---".into());
+        markdown_to_html(&self.content, &options)
+    }
 }
 
 #[get("/recipe/<recipe>")]
@@ -60,11 +71,7 @@ fn rocket() -> _ {
             for recipe in recipes {
                 let write_result = std::fs::write(
                     format!("./compiled/{}.html", recipe.title),
-                    views::recipe(
-                        &recipe.title,
-                        &markdown_to_html(recipe.content.as_str(), &Options::default()),
-                    )
-                    .into_string(),
+                    views::recipe(&recipe).into_string(),
                 );
                 match write_result {
                     Ok(_) => println!("Wrote {}", recipe.title),
