@@ -1,8 +1,8 @@
 use std::{fs, path::PathBuf};
 
-use comrak::Options;
-use maud::{html, Markup};
-use rocket::http::Status;
+use comrak::{markdown_to_html, Options};
+use maud::Markup;
+use rocket::http::{ContentType, Status};
 
 #[macro_use]
 extern crate rocket;
@@ -16,12 +16,10 @@ pub struct Recipe {
 }
 
 #[get("/recipe/<recipe>")]
-fn read_recipe(recipe: &str) -> Result<Markup, Status> {
-    let content = fs::read_to_string(format!("./recipes/{}", recipe)).unwrap_or(String::from(""));
-    Ok(html! {
-        p { (recipe) }
-        (maud::PreEscaped(comrak::markdown_to_html(&content, &Options::default())))
-    })
+fn read_recipe(recipe: &str) -> Result<(Status, (ContentType, String)), Status> {
+    let content =
+        fs::read_to_string(format!("./compiled/{}.html", recipe)).unwrap_or(String::from(""));
+    Ok((Status::Ok, (ContentType::HTML, content)))
 }
 
 fn get_recipes() -> Result<Vec<Recipe>, String> {
@@ -31,7 +29,12 @@ fn get_recipes() -> Result<Vec<Recipe>, String> {
         .map(|res| {
             res.map(|e| Recipe {
                 _path: e.path(),
-                title: e.file_name().to_str().unwrap().to_string(),
+                title: e
+                    .file_name()
+                    .to_str()
+                    .unwrap()
+                    .to_string()
+                    .replace(".md", ""),
                 content: fs::read_to_string(e.path()).unwrap_or(String::from("")),
             })
         })
@@ -55,10 +58,18 @@ fn rocket() -> _ {
     match get_recipes() {
         Ok(recipes) => {
             for recipe in recipes {
-                println!(
-                    "{:?}",
-                    comrak::markdown_to_html(&recipe.content, &Options::default())
-                )
+                let write_result = std::fs::write(
+                    format!("./compiled/{}.html", recipe.title),
+                    views::recipe(
+                        &recipe.title,
+                        &markdown_to_html(recipe.content.as_str(), &Options::default()),
+                    )
+                    .into_string(),
+                );
+                match write_result {
+                    Ok(_) => println!("Wrote {}", recipe.title),
+                    _ => println!("Failed to write {}", recipe.title),
+                };
             }
         }
         Err(e) => {

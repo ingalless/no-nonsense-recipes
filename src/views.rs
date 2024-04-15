@@ -13,3 +13,10 @@ pub fn index(recipes: Vec<Recipe>) -> Markup {
         }
     }
 }
+
+pub fn recipe(title: &String, content: &String) -> Markup {
+    html! {
+        p { (title) }
+        (maud::PreEscaped(content))
+    }
+}
