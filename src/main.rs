@@ -89,35 +89,71 @@ mod test {
     use std::{fs, io};
 
     use super::rocket;
-    use crate::rocket_uri_macro_index;
     use rocket::form::validate::Contains;
     use rocket::http::Status;
     use rocket::local::blocking::Client;
-    use rocket::uri;
     use tempdir::TempDir;
+
+    fn setup_env(tmp_recipe_dir: &TempDir, tmp_compiled_dir: &TempDir) -> Result<(), io::Error> {
+        std::env::set_var("APP_RECIPES_PATH", tmp_recipe_dir.path());
+        std::env::set_var("APP_COMPILED_PATH", tmp_compiled_dir.path());
+
+        Ok(())
+    }
 
     #[test]
     fn index() -> Result<(), io::Error> {
         let tmp_recipe_dir = TempDir::new("test_recipes")?;
         let tmp_compiled_dir = TempDir::new("test_compiled")?;
         let file_path = tmp_recipe_dir.path().join("soy-salmon.md");
-        let expected_compiled_path = tmp_compiled_dir.path().join("soy-salmon.html");
         fs::write(file_path, "# Honey Soy Salmon")?;
-        std::env::set_var("APP_RECIPES_PATH", tmp_recipe_dir.path());
-        std::env::set_var("APP_COMPILED_PATH", tmp_compiled_dir.path());
+        setup_env(&tmp_recipe_dir, &tmp_compiled_dir).expect("Failed to setup tempdirs");
 
         let client = Client::tracked(rocket()).expect("valid rocket instance");
 
-        let response = client.get(uri!(index)).dispatch();
+        let expected_compiled_path = tmp_compiled_dir.path().join("soy-salmon.html");
+
+        let response = client.get("/").dispatch();
         assert_eq!(response.status(), Status::Ok);
         let content = response.into_string();
         assert_eq!(content.contains("No Nonsense Recipes"), true);
+        assert_eq!(
+            content.contains("<a href=\"/recipe/soy-salmon\">soy-salmon</a>"),
+            true
+        );
+
+        let compiled =
+            fs::read_to_string(expected_compiled_path).expect("Compiled file not created");
+        assert_eq!(compiled, "<h1>Honey Soy Salmon</h1>\n");
+
+        tmp_recipe_dir.close()?;
+        tmp_compiled_dir.close()?;
+        Ok(())
+    }
+
+    #[test]
+    fn read_recipe() -> Result<(), io::Error> {
+        let tmp_recipe_dir = TempDir::new("test_recipes")?;
+        let tmp_compiled_dir = TempDir::new("test_compiled")?;
+        let file_path = tmp_recipe_dir.path().join("soy-salmon.md");
+        fs::write(file_path, "# Honey Soy Salmon")?;
+        setup_env(&tmp_recipe_dir, &tmp_compiled_dir).expect("Failed to setup tempdirs");
+
+        let client = Client::tracked(rocket()).expect("valid rocket instance");
+
+        let expected_compiled_path = tmp_compiled_dir.path().join("soy-salmon.html");
+
+        let response = client.get("/recipe/soy-salmon").dispatch();
+        assert_eq!(response.status(), Status::Ok);
+        let content = response.into_string();
         assert_eq!(content.contains("soy-salmon"), true);
 
         let compiled =
             fs::read_to_string(expected_compiled_path).expect("Compiled file not created");
         assert_eq!(compiled, "<h1>Honey Soy Salmon</h1>\n");
 
+        tmp_recipe_dir.close()?;
+        tmp_compiled_dir.close()?;
         Ok(())
     }
 }
