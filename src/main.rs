@@ -1,5 +1,6 @@
 use std::{fs, path::PathBuf};
 
+use compiler::Compiler;
 use comrak::{markdown_to_html, Options};
 use maud::Markup;
 use rocket::http::{ContentType, Status};
@@ -7,6 +8,7 @@ use rocket::http::{ContentType, Status};
 #[macro_use]
 extern crate rocket;
 
+mod compiler;
 mod views;
 
 #[derive(Clone)]
@@ -67,20 +69,14 @@ fn index() -> Result<Markup, Status> {
 
 #[launch]
 fn rocket() -> _ {
-    let path = std::env::var("APP_RECIPES_PATH").unwrap_or("./recipes".into());
-    match get_recipes(path) {
-        Ok(recipes) => {
-            for recipe in recipes {
-                let write_result = std::fs::write(
-                    format!("./compiled/{}.html", recipe.title),
-                    views::recipe(&recipe).into_string(),
-                );
-                match write_result {
-                    Ok(_) => println!("Wrote {}", recipe.title),
-                    _ => println!("Failed to write {}", recipe.title),
-                };
-            }
-        }
+    let recipes_path = std::env::var("APP_RECIPES_PATH").unwrap_or("./recipes".into());
+    let compiled_path = std::env::var("APP_COMPILED_PATH").unwrap_or("./compiled".into());
+    let compiler = Compiler::new(compiled_path);
+
+    match get_recipes(recipes_path) {
+        Ok(recipes) => compiler
+            .compile_recipes(recipes)
+            .expect("Failed to compile recipes"),
         Err(e) => {
             println!("{}", e);
         }
@@ -102,10 +98,13 @@ mod test {
 
     #[test]
     fn index() -> Result<(), io::Error> {
-        let tmp_dir = TempDir::new("recipes")?;
-        let file_path = tmp_dir.path().join("soy-salmon.md");
-        fs::write(file_path, "#Honey Soy Salmon")?;
-        std::env::set_var("APP_RECIPES_PATH", tmp_dir.path());
+        let tmp_recipe_dir = TempDir::new("test_recipes")?;
+        let tmp_compiled_dir = TempDir::new("test_compiled")?;
+        let file_path = tmp_recipe_dir.path().join("soy-salmon.md");
+        let expected_compiled_path = tmp_compiled_dir.path().join("soy-salmon.html");
+        fs::write(file_path, "# Honey Soy Salmon")?;
+        std::env::set_var("APP_RECIPES_PATH", tmp_recipe_dir.path());
+        std::env::set_var("APP_COMPILED_PATH", tmp_compiled_dir.path());
 
         let client = Client::tracked(rocket()).expect("valid rocket instance");
 
@@ -114,6 +113,10 @@ mod test {
         let content = response.into_string();
         assert_eq!(content.contains("No Nonsense Recipes"), true);
         assert_eq!(content.contains("soy-salmon"), true);
+
+        let compiled =
+            fs::read_to_string(expected_compiled_path).expect("Compiled file not created");
+        assert_eq!(compiled, "<h1>Honey Soy Salmon</h1>\n");
 
         Ok(())
     }

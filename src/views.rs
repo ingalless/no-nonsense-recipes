@@ -16,7 +16,6 @@ pub fn index(recipes: Vec<Recipe>) -> Markup {
 
 pub fn recipe(recipe: &Recipe) -> Markup {
     html! {
-        p { (recipe.title) }
         (maud::PreEscaped(recipe.to_html()))
     }
 }
