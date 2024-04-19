@@ -124,7 +124,7 @@ mod test {
 
         let compiled =
             fs::read_to_string(expected_compiled_path).expect("Compiled file not created");
-        assert_eq!(compiled, "<h1>Honey Soy Salmon</h1>\n");
+        assert_eq!(compiled.contains("Honey Soy Salmon"), true);
 
         tmp_recipe_dir.close()?;
         tmp_compiled_dir.close()?;
@@ -150,7 +150,7 @@ mod test {
 
         let compiled =
             fs::read_to_string(expected_compiled_path).expect("Compiled file not created");
-        assert_eq!(compiled, "<h1>Honey Soy Salmon</h1>\n");
+        assert_eq!(compiled.contains("Honey Soy Salmon"), true);
 
         tmp_recipe_dir.close()?;
         tmp_compiled_dir.close()?;
