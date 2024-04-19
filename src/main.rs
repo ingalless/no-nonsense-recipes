@@ -103,8 +103,8 @@ mod test {
 
     #[test]
     fn index() -> Result<(), io::Error> {
-        let tmp_recipe_dir = TempDir::new("test_recipes")?;
-        let tmp_compiled_dir = TempDir::new("test_compiled")?;
+        let tmp_recipe_dir = TempDir::new("test_recipes_index")?;
+        let tmp_compiled_dir = TempDir::new("test_compiled_index")?;
         let file_path = tmp_recipe_dir.path().join("soy-salmon.md");
         fs::write(file_path, "# Honey Soy Salmon")?;
         setup_env(&tmp_recipe_dir, &tmp_compiled_dir).expect("Failed to setup tempdirs");
@@ -133,8 +133,8 @@ mod test {
 
     #[test]
     fn read_recipe() -> Result<(), io::Error> {
-        let tmp_recipe_dir = TempDir::new("test_recipes")?;
-        let tmp_compiled_dir = TempDir::new("test_compiled")?;
+        let tmp_recipe_dir = TempDir::new("test_recipes_read")?;
+        let tmp_compiled_dir = TempDir::new("test_compiled_read")?;
         let file_path = tmp_recipe_dir.path().join("soy-salmon.md");
         fs::write(file_path, "# Honey Soy Salmon")?;
         setup_env(&tmp_recipe_dir, &tmp_compiled_dir).expect("Failed to setup tempdirs");

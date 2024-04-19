@@ -9,20 +9,24 @@ Serves 2
 
 ## Ingredients
 
-- [ ] 6-8 Tenderstem Broccoli Shoots
-- [ ] 2 Salmon fillets
-- [ ] Rice or noodles
-- [ ] For the sauce:
-    - [ ] 1/4 cup honey
-    - [ ] 3 cloves garlic, minced
-    - [ ] 2 Tablespoons reduced sodium soy sauce
-    - [ ] 1 Tablespoon seasoned rice vinegar
-    - [ ] 1 Tablespoon sesame oil
-    - [ ] 1 teaspoon freshly grated ginger
-    - [ ] 2 teaspoons Sriracha
-- [ ] To serve (optional):
-    - [ ] 2 green onions, thinly sliced
-    - [ ] 1/2 teaspoon sesame seeds
+- 6-8 Tenderstem Broccoli Shoots
+- 2 Salmon fillets
+- Rice or noodles
+
+### For the sauce:
+- 1/4 cup honey
+- 3 cloves garlic, minced
+- 2 Tablespoons reduced sodium soy sauce
+- 1 Tablespoon seasoned rice vinegar
+- 1 Tablespoon sesame oil
+- 1 teaspoon freshly grated ginger
+- 2 teaspoons Sriracha
+
+### To serve (optional):
+- 2 green onions, thinly sliced
+- 1/2 teaspoon sesame seeds
+
+## Recipe
 
 Marinade the salmon in the following dressing. 10 mins is plenty:
 * 1/4 cup honey
