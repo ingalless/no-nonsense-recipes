@@ -8,4 +8,5 @@ RUN cargo install --path .
 FROM alpine:3.14
 
 COPY --from=builder /usr/local/cargo/bin/no-nonsense-recipes /usr/local/bin/no-nonsense-recipes
+RUN chmod +x /usr/local/bin/no-nonsense-recipes
 CMD ["no-nonsense-recipes"]
