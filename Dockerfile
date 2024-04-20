@@ -19,6 +19,6 @@ RUN apt-get update \
 	&& rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/local/cargo/bin/no-nonsense-recipes /usr/local/bin/no-nonsense-recipes
 COPY --from=builder /usr/src/no-nonsense-recipes/recipes /home/recipes
-RUN mkdir /home/recipes /home/compiled
+RUN mkdir /home/compiled
 CMD ["no-nonsense-recipes"]
 
