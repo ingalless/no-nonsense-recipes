@@ -1,4 +1,7 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use compiler::Compiler;
 use comrak::{markdown_to_html, Options};
@@ -30,8 +33,10 @@ impl Recipe {
 
 #[get("/recipe/<recipe>")]
 fn read_recipe(recipe: &str) -> Result<(Status, (ContentType, String)), Status> {
-    let content =
-        fs::read_to_string(format!("./compiled/{}.html", recipe)).unwrap_or(String::from(""));
+    let compiled_path = std::env::var("APP_COMPILED_PATH").unwrap_or("./compiled".into());
+    let recipe_file = format!("{}.html", recipe);
+    let path = Path::new(&compiled_path).join(recipe_file);
+    let content = fs::read_to_string(path).unwrap_or(String::from(""));
     Ok((Status::Ok, (ContentType::HTML, content)))
 }
 
