@@ -7,6 +7,7 @@ FROM debian:bookworm-slim
 
 ENV APP_RECIPES_PATH=/home/recipes
 ENV APP_COMPILED_PATH=/home/compiled
+ENV ROCKET_ADDRESS=0.0.0.0
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
@@ -20,5 +21,7 @@ RUN apt-get update \
 COPY --from=builder /usr/local/cargo/bin/no-nonsense-recipes /usr/local/bin/no-nonsense-recipes
 COPY --from=builder /usr/src/no-nonsense-recipes/recipes /home/recipes
 RUN mkdir /home/compiled
+
+EXPOSE 8000
 CMD ["no-nonsense-recipes"]
 
