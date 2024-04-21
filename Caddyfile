@@ -1,0 +1,3 @@
+recipes.ingalless.com:80 {
+        reverse_proxy http://recipes:8000
+}
