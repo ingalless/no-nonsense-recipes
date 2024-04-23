@@ -9,6 +9,8 @@ edition = "2021"
 rocket = "0.5.0"
 comrak = "0.21.0"
 maud = { version = "0.26.0", features = ["rocket"] }
+serde = { version = "1.0.198", features = ["std", "derive"] }
+serde_yaml = "0.9.34"
 
 [dev-dependencies]
 tempdir = "0.3.7"

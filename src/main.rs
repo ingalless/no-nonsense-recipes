@@ -31,6 +31,14 @@ impl Recipe {
     }
 }
 
+#[get("/tags")]
+fn tags() -> Result<(Status, (ContentType, String)), Status> {
+    let compiled_path = std::env::var("APP_COMPILED_PATH").unwrap_or("./compiled".into());
+    let path = Path::new(&compiled_path).join("tags.html");
+    let content = fs::read_to_string(path).unwrap_or(String::from(""));
+    Ok((Status::Ok, (ContentType::HTML, content)))
+}
+
 #[get("/recipe/<recipe>")]
 fn read_recipe(recipe: &str) -> Result<(Status, (ContentType, String)), Status> {
     let compiled_path = std::env::var("APP_COMPILED_PATH").unwrap_or("./compiled".into());
@@ -86,7 +94,7 @@ fn rocket() -> _ {
             println!("{}", e);
         }
     }
-    rocket::build().mount("/", routes![index, read_recipe])
+    rocket::build().mount("/", routes![index, read_recipe, tags])
 }
 
 #[cfg(test)]
