@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 use comrak::{
     nodes::{AstNode, NodeValue},
@@ -24,28 +24,35 @@ pub struct Compiler {
     path: String,
 }
 
-fn iter_nodes<'a, F>(node: &'a AstNode<'a>, f: &F)
-where
-    F: Fn(&'a AstNode<'a>),
-{
-    f(node);
-    for c in node.children() {
-        iter_nodes(c, f);
-    }
-}
-
-fn extract_tags(options: &Options, content: &String) {
-    let arena = Arena::new();
-    let root = parse_document(&arena, &content, &options);
-
-    iter_nodes(root, &|node| match &mut node.data.borrow_mut().value {
-        &mut NodeValue::FrontMatter(ref text) => {
+fn process_node<'a>(node: &'a AstNode<'a>) -> Vec<String> {
+    let mut tags = vec![];
+    match node.data.borrow().value {
+        NodeValue::FrontMatter(ref text) => {
+            let raw = text.replace("---", "");
             let frontmatter: Frontmatter =
-                serde_yaml::from_str(text).unwrap_or(Frontmatter::default());
-            println!("raw: {:?}, deserialized: {:?}", text, frontmatter.tags);
+                serde_yaml::from_str(&raw).unwrap_or(Frontmatter::default());
+            for tag in frontmatter.tags {
+                tags.push(tag)
+            }
         }
         _ => (),
-    });
+    };
+
+    tags
+}
+
+fn extract_tags(options: &Options, content: &String) -> Vec<String> {
+    let arena = Arena::new();
+    let root = parse_document(&arena, &content, &options);
+    let mut tags: Vec<String> = vec![];
+
+    for c in root.children() {
+        for tag in process_node(&c) {
+            tags.push(tag);
+        }
+    }
+
+    return tags;
 }
 
 impl Compiler {
@@ -59,8 +66,17 @@ impl Compiler {
     }
 
     pub fn compile_recipes(self: &Self, recipes: Vec<Recipe>) -> Result<(), String> {
+        let mut tag_map: HashMap<String, Vec<String>> = HashMap::new();
         for recipe in recipes {
-            extract_tags(&self.options, &recipe.content);
+            for tag in extract_tags(&self.options, &recipe.content) {
+                match tag_map.get_mut(&tag) {
+                    Some(v) => v.push(recipe.title.clone()),
+                    None => {
+                        tag_map.insert(tag, vec![recipe.title.clone()]);
+                    }
+                }
+            }
+
             let target_path = Path::new(&self.path).join(format!("{}.html", recipe.title));
             let write_result = std::fs::write(&target_path, views::recipe(&recipe).into_string());
             match write_result {
@@ -71,6 +87,35 @@ impl Compiler {
                 }
             };
         }
+        let tag_target_path = Path::new(&self.path).join("tags.html");
+        let write_result = std::fs::write(&tag_target_path, views::tags(&tag_map).into_string());
+        match write_result {
+            Ok(_) => println!("Wrote {}", tag_target_path.to_str().unwrap()),
+            Err(_) => {
+                println!("Failed to write tags page");
+                return Err("Failed to write tags page".into());
+            }
+        };
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::{extract_tags, Compiler};
+
+    #[test]
+    fn single() {
+        let compiler = Compiler::new("".into());
+        let content = "---
+tags:
+- asian
+- curry
+---
+"
+        .to_string();
+        let expected_tags = vec![String::from("asian"), String::from("curry")];
+        let tags = extract_tags(&compiler.options, &content);
+        assert_eq!(expected_tags, tags);
     }
 }

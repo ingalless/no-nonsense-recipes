@@ -2,7 +2,7 @@
 servings: 2
 difficulty: 1
 tags:
-    - healthy
+- healthy
 ---
 
 # Stuffed Aubergines

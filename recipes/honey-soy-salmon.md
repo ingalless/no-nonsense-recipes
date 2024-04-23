@@ -2,8 +2,8 @@
 servings: 2
 difficulty: 1
 tags:
-    - asian
-    - healthy
+- asian
+- healthy
 ---
 
 # Honey Soy Salmon
