@@ -77,8 +77,14 @@ impl Compiler {
                 }
             }
 
-            let target_path = Path::new(&self.path).join(format!("{}.html", recipe.title));
-            let write_result = std::fs::write(&target_path, views::recipe(&recipe).into_string());
+            let target_path = Path::new(&self.path).join("recipes").join(&recipe.title);
+            let write_result = match std::fs::create_dir_all(&target_path) {
+                Ok(_) => std::fs::write(
+                    &target_path.join("index.html"),
+                    views::recipe(&recipe).into_string(),
+                ),
+                Err(_) => return Err(format!("Failed to write {}", recipe.title)),
+            };
             match write_result {
                 Ok(_) => println!("Wrote {}", target_path.to_str().unwrap()),
                 Err(_) => {
@@ -87,8 +93,17 @@ impl Compiler {
                 }
             };
         }
-        let tag_target_path = Path::new(&self.path).join("tags.html");
-        let write_result = std::fs::write(&tag_target_path, views::tags(&tag_map).into_string());
+        let tag_target_path = Path::new(&self.path).join("tags");
+        let write_result = match std::fs::create_dir_all(&tag_target_path) {
+            Ok(_) => std::fs::write(
+                &tag_target_path.join("index.html"),
+                views::tags(&tag_map).into_string(),
+            ),
+            Err(_) => {
+                println!("Failed to write tags page");
+                return Err("Failed to write tags page".into());
+            }
+        };
         match write_result {
             Ok(_) => println!("Wrote {}", tag_target_path.to_str().unwrap()),
             Err(_) => {
