@@ -36,7 +36,7 @@ pub fn index(recipes: Vec<Recipe>) -> Markup {
             p { em { "Print friendly too!" } }
             ul {
                 @for recipe in recipes {
-                    li { a href=(format!("/recipe/{}", recipe.title)) { (recipe.title) } }
+                    li { a href=(format!("/recipes/{}", recipe.title)) { (recipe.title) } }
                 }
             }
         }
@@ -50,7 +50,7 @@ pub fn tags(tags: &HashMap<String, Vec<String>>) -> Markup {
                 h2 { (tag) }
                 ul {
                     @for recipe in recipes {
-                        li { a class="text-blue-500" href=(format!("/recipe/{}", recipe)) { (recipe) } }
+                        li { a class="text-blue-500" href=(format!("/recipes/{}", recipe)) { (recipe) } }
                     }
                 }
             }

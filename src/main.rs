@@ -1,12 +1,9 @@
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::{fs, path::PathBuf};
 
 use compiler::Compiler;
 use comrak::{markdown_to_html, Options};
 use maud::Markup;
-use rocket::http::{ContentType, Status};
+use rocket::{fs::FileServer, http::Status};
 
 #[macro_use]
 extern crate rocket;
@@ -29,23 +26,6 @@ impl Recipe {
         options.extension.front_matter_delimiter = Some("---".into());
         markdown_to_html(&self.content, &options)
     }
-}
-
-#[get("/tags")]
-fn tags() -> Result<(Status, (ContentType, String)), Status> {
-    let compiled_path = std::env::var("APP_COMPILED_PATH").unwrap_or("./compiled".into());
-    let path = Path::new(&compiled_path).join("tags.html");
-    let content = fs::read_to_string(path).unwrap_or(String::from(""));
-    Ok((Status::Ok, (ContentType::HTML, content)))
-}
-
-#[get("/recipe/<recipe>")]
-fn read_recipe(recipe: &str) -> Result<(Status, (ContentType, String)), Status> {
-    let compiled_path = std::env::var("APP_COMPILED_PATH").unwrap_or("./compiled".into());
-    let recipe_file = format!("{}.html", recipe);
-    let path = Path::new(&compiled_path).join(recipe_file);
-    let content = fs::read_to_string(path).unwrap_or(String::from(""));
-    Ok((Status::Ok, (ContentType::HTML, content)))
 }
 
 fn get_recipes(path: String) -> Result<Vec<Recipe>, String> {
@@ -84,7 +64,7 @@ fn index() -> Result<Markup, Status> {
 fn rocket() -> _ {
     let recipes_path = std::env::var("APP_RECIPES_PATH").unwrap_or("./recipes".into());
     let compiled_path = std::env::var("APP_COMPILED_PATH").unwrap_or("./compiled".into());
-    let compiler = Compiler::new(compiled_path);
+    let compiler = Compiler::new(compiled_path.clone());
 
     match get_recipes(recipes_path) {
         Ok(recipes) => compiler
@@ -94,7 +74,9 @@ fn rocket() -> _ {
             println!("{}", e);
         }
     }
-    rocket::build().mount("/", routes![index, read_recipe, tags])
+    rocket::build()
+        .mount("/", routes![index])
+        .mount("/", FileServer::from(compiled_path))
 }
 
 #[cfg(test)]
@@ -124,20 +106,14 @@ mod test {
 
         let client = Client::tracked(rocket()).expect("valid rocket instance");
 
-        let expected_compiled_path = tmp_compiled_dir.path().join("soy-salmon.html");
-
         let response = client.get("/").dispatch();
         assert_eq!(response.status(), Status::Ok);
         let content = response.into_string();
         assert_eq!(content.contains("No Nonsense Recipes"), true);
         assert_eq!(
-            content.contains("<a href=\"/recipe/soy-salmon\">soy-salmon</a>"),
+            content.contains("<a href=\"/recipes/soy-salmon\">soy-salmon</a>"),
             true
         );
-
-        let compiled =
-            fs::read_to_string(expected_compiled_path).expect("Compiled file not created");
-        assert_eq!(compiled.contains("Honey Soy Salmon"), true);
 
         tmp_recipe_dir.close()?;
         tmp_compiled_dir.close()?;
@@ -154,12 +130,16 @@ mod test {
 
         let client = Client::tracked(rocket()).expect("valid rocket instance");
 
-        let expected_compiled_path = tmp_compiled_dir.path().join("soy-salmon.html");
+        let expected_compiled_path = tmp_compiled_dir
+            .path()
+            .join("recipes")
+            .join("soy-salmon")
+            .join("index.html");
 
-        let response = client.get("/recipe/soy-salmon").dispatch();
+        let response = client.get("/recipes/soy-salmon").dispatch();
         assert_eq!(response.status(), Status::Ok);
         let content = response.into_string();
-        assert_eq!(content.contains("soy-salmon"), true);
+        assert_eq!(content.contains("Honey Soy Salmon"), true);
 
         let compiled =
             fs::read_to_string(expected_compiled_path).expect("Compiled file not created");
