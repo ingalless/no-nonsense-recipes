@@ -11,7 +11,7 @@ extern crate rocket;
 mod compiler;
 mod views;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, PartialOrd)]
 pub struct Recipe {
     _path: PathBuf,
     title: String,
@@ -25,6 +25,12 @@ impl Recipe {
         options.extension.tasklist = true;
         options.extension.front_matter_delimiter = Some("---".into());
         markdown_to_html(&self.content, &options)
+    }
+}
+impl Eq for Recipe {}
+impl Ord for Recipe {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.title.cmp(&other.title)
     }
 }
 

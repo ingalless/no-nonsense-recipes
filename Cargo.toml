@@ -11,6 +11,7 @@ comrak = "0.21.0"
 maud = { version = "0.26.0", features = ["rocket"] }
 serde = { version = "1.0.198", features = ["std", "derive"] }
 serde_yaml = "0.9.34"
+itertools = "0.12.1"
 
 [dev-dependencies]
 tempdir = "0.3.7"
