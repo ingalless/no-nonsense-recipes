@@ -1,4 +1,4 @@
-FROM rust:1.76 as builder
+FROM --platform=$BUILDPLATFORM rust:1.76 as builder
 WORKDIR /usr/src/no-nonsense-recipes
 COPY . .
 RUN cargo install --path .
