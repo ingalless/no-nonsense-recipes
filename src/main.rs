@@ -1,4 +1,7 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs::{self, DirEntry},
+    path::PathBuf,
+};
 
 use compiler::Compiler;
 use comrak::{markdown_to_html, Options};
@@ -14,6 +17,7 @@ mod views;
 #[derive(Clone, PartialEq, PartialOrd)]
 pub struct Recipe {
     _path: PathBuf,
+    slug: String,
     title: String,
     content: String,
 }
@@ -30,26 +34,32 @@ impl Recipe {
 impl Eq for Recipe {}
 impl Ord for Recipe {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.title.cmp(&other.title)
+        self.slug.cmp(&other.slug)
     }
 }
 
+fn map_to_recipe(entry: DirEntry) -> Recipe {
+    let slug = entry
+        .file_name()
+        .to_str()
+        .unwrap()
+        .to_string()
+        .replace(".md", "");
+    let title = slug.replace("-", " ");
+
+    Recipe {
+        _path: entry.path(),
+        slug,
+        title,
+        content: fs::read_to_string(entry.path()).unwrap_or(String::from("")),
+    }
+}
 fn get_recipes(path: String) -> Result<Vec<Recipe>, String> {
     let dir = fs::read_dir(path);
+
     let entries = dir
         .unwrap()
-        .map(|res| {
-            res.map(|e| Recipe {
-                _path: e.path(),
-                title: e
-                    .file_name()
-                    .to_str()
-                    .unwrap()
-                    .to_string()
-                    .replace(".md", ""),
-                content: fs::read_to_string(e.path()).unwrap_or(String::from("")),
-            })
-        })
+        .map(|res| res.map(map_to_recipe))
         .collect::<Result<Vec<_>, std::io::Error>>();
     return match entries {
         Ok(recipes) => Ok(recipes),

@@ -49,16 +49,16 @@ pub fn index(recipes: Vec<Recipe>) -> Markup {
                 h2 class="text-xl mb-2 text-teal-900 font-bold" { "Our Recipes." }
                 ul class="ml-1" {
                     @for recipe in sorted(recipes) {
-                        li { a class="text-teal-600 font-bold" href=(format!("/recipes/{}", recipe.title)) { (recipe.title) } }
+                        li { a class="text-teal-600 font-bold" href=(format!("/recipes/{}", recipe.slug)) { (recipe.title) } }
                     }
                 }
             }
         }
 
-        section class="mt-24 p-24 w-full bg-teal-900" {
+        section class="mt-24 py-8 md:p-24 w-full bg-teal-900" {
             div class="mx-8 text-teal-50" {
                 h2 class="text-teal-50 text-xl" { "Why?" }
-                p class="max-w-xl text-sm" { "Each week I'm asked \"What should we have for dinner this week?\". This question stumps me. \"But it's okay\" I think to myself, \"I can Google it!\" But doing so only results in disappointment as I fight ads, popups and woefully slow websites. This website is an attempt to capture the recipes we enjoy and share them without any of the nonsense that comes with mainstream recipe websites." }
+                p class="max-w-full text-justify md:max-w-xl text-sm" { "Each week I'm asked \"What should we have for dinner this week?\". This question stumps me. \"But it's okay\" I think to myself, \"I can Google it!\" But doing so only results in disappointment as I fight ads, popups and woefully slow websites. This website is an attempt to capture the recipes we enjoy and share them without any of the nonsense that comes with mainstream recipe websites." }
             }
         }
     })

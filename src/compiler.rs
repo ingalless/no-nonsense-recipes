@@ -70,26 +70,26 @@ impl Compiler {
         for recipe in recipes {
             for tag in extract_tags(&self.options, &recipe.content) {
                 match tag_map.get_mut(&tag) {
-                    Some(v) => v.push(recipe.title.clone()),
+                    Some(v) => v.push(recipe.slug.clone()),
                     None => {
-                        tag_map.insert(tag, vec![recipe.title.clone()]);
+                        tag_map.insert(tag, vec![recipe.slug.clone()]);
                     }
                 }
             }
 
-            let target_path = Path::new(&self.path).join("recipes").join(&recipe.title);
+            let target_path = Path::new(&self.path).join("recipes").join(&recipe.slug);
             let write_result = match std::fs::create_dir_all(&target_path) {
                 Ok(_) => std::fs::write(
                     &target_path.join("index.html"),
                     views::recipe(&recipe).into_string(),
                 ),
-                Err(_) => return Err(format!("Failed to write {}", recipe.title)),
+                Err(_) => return Err(format!("Failed to write {}", recipe.slug)),
             };
             match write_result {
                 Ok(_) => println!("Wrote {}", target_path.to_str().unwrap()),
                 Err(_) => {
-                    println!("Failed to write {}", recipe.title);
-                    return Err(format!("Failed to write {}", recipe.title));
+                    println!("Failed to write {}", recipe.slug);
+                    return Err(format!("Failed to write {}", recipe.slug));
                 }
             };
         }
