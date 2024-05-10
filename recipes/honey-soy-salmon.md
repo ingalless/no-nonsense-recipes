@@ -27,13 +27,11 @@ Serves 2
 
 ### To serve (optional):
 - 2 green onions, thinly sliced
-- 1/2 teaspoon sesame seeds
+- 1/2 teaspoon sesame seeds or some crushed peanuts
 
 ## Recipe
 
 1. Marinade the salmon in the sauce for at least 10 minutes.
 2. Cover the tenderstem broccoli in some salt and olive oil. Put the salmon in a foil parcel and cover with the sauce.
 3. Roast both the salmon and the broccoli for 25 mins at 200°C (Fan), turning the broccoli occasionally.
-4. Serve with noodles or rice. Optionally, top with the following:
-    - 2 green onions, thinly sliced
-    - 1/2 teaspoon sesame seeds
+4. Serve with noodles or rice. Optionally, top with the spring onions and sesame seeds (or crushed peanuts).
