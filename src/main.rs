@@ -58,7 +58,6 @@ fn map_to_recipe(entry: DirEntry) -> Recipe {
     return recipe;
 }
 fn get_recipes(path: String) -> Result<Vec<Recipe>, String> {
-    println!("In get recipes");
     let dir = fs::read_dir(path);
     let recipes_dir = dir.unwrap().filter_ok(|res| res.path().is_dir());
 
