@@ -5,6 +5,7 @@ use std::{
 
 use compiler::Compiler;
 use comrak::{markdown_to_html, Options};
+use itertools::Itertools;
 use maud::Markup;
 use rocket::{fs::FileServer, http::Status};
 
@@ -14,7 +15,7 @@ extern crate rocket;
 mod compiler;
 mod views;
 
-#[derive(Clone, PartialEq, PartialOrd)]
+#[derive(Clone, PartialEq, PartialOrd, Debug)]
 pub struct Recipe {
     _path: PathBuf,
     slug: String,
@@ -47,20 +48,21 @@ fn map_to_recipe(entry: DirEntry) -> Recipe {
         .replace(".md", "");
     let title = slug.replace("-", " ");
 
-    Recipe {
+    let recipe = Recipe {
         _path: entry.path(),
         slug,
         title,
-        content: fs::read_to_string(entry.path()).unwrap_or(String::from("")),
-    }
+        content: fs::read_to_string(entry.path().join("index.md")).unwrap_or(String::from("")),
+    };
+    println!("{:?}", recipe);
+    return recipe;
 }
 fn get_recipes(path: String) -> Result<Vec<Recipe>, String> {
+    println!("In get recipes");
     let dir = fs::read_dir(path);
+    let recipes_dir = dir.unwrap().filter_ok(|res| res.path().is_dir());
 
-    let entries = dir
-        .unwrap()
-        .map(|res| res.map(map_to_recipe))
-        .collect::<Result<Vec<_>, std::io::Error>>();
+    let entries = recipes_dir.map_ok(map_to_recipe).collect();
     return match entries {
         Ok(recipes) => Ok(recipes),
         Err(e) => Err(e.to_string()),
@@ -87,7 +89,7 @@ fn rocket() -> _ {
             .compile_recipes(recipes)
             .expect("Failed to compile recipes"),
         Err(e) => {
-            println!("{}", e);
+            println!("Get recipes failed {}", e);
         }
     }
     rocket::build()
@@ -116,7 +118,9 @@ mod test {
     fn index() -> Result<(), io::Error> {
         let tmp_recipe_dir = TempDir::new("test_recipes_index")?;
         let tmp_compiled_dir = TempDir::new("test_compiled_index")?;
-        let file_path = tmp_recipe_dir.path().join("soy-salmon.md");
+        std::fs::create_dir(tmp_recipe_dir.path().join("soy-salmon"))
+            .expect("Failed to create soy-salmon dir");
+        let file_path = tmp_recipe_dir.path().join("soy-salmon").join("index.md");
         fs::write(file_path, "# Honey Soy Salmon")?;
         setup_env(&tmp_recipe_dir, &tmp_compiled_dir).expect("Failed to setup tempdirs");
 
@@ -125,11 +129,9 @@ mod test {
         let response = client.get("/").dispatch();
         assert_eq!(response.status(), Status::Ok);
         let content = response.into_string();
-        assert_eq!(content.contains("No Nonsense Recipes"), true);
-        assert_eq!(
-            content.contains("<a href=\"/recipes/soy-salmon\">soy-salmon</a>"),
-            true
-        );
+        assert_eq!(content.contains("What's for dinner?"), true);
+        assert_eq!(content.contains("href=\"/recipes/soy-salmon\""), true);
+        assert_eq!(content.contains("soy salmon"), true);
 
         tmp_recipe_dir.close()?;
         tmp_compiled_dir.close()?;
@@ -140,7 +142,9 @@ mod test {
     fn read_recipe() -> Result<(), io::Error> {
         let tmp_recipe_dir = TempDir::new("test_recipes_read")?;
         let tmp_compiled_dir = TempDir::new("test_compiled_read")?;
-        let file_path = tmp_recipe_dir.path().join("soy-salmon.md");
+        std::fs::create_dir(tmp_recipe_dir.path().join("soy-salmon"))
+            .expect("Failed to create soy-salmon dir");
+        let file_path = tmp_recipe_dir.path().join("soy-salmon").join("index.md");
         fs::write(file_path, "# Honey Soy Salmon")?;
         setup_env(&tmp_recipe_dir, &tmp_compiled_dir).expect("Failed to setup tempdirs");
 
