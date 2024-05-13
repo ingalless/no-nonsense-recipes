@@ -1,6 +1,7 @@
 use std::{
     fs::{self, DirEntry},
     path::PathBuf,
+    str::FromStr,
 };
 
 use compiler::Compiler;
@@ -17,10 +18,9 @@ mod views;
 
 #[derive(Clone, PartialEq, PartialOrd, Debug)]
 pub struct Recipe {
-    _path: PathBuf,
     slug: String,
     title: String,
-    content: String,
+    path: PathBuf,
 }
 
 impl Recipe {
@@ -81,16 +81,14 @@ fn index() -> Result<Markup, Status> {
 fn rocket() -> _ {
     let recipes_path = std::env::var("APP_RECIPES_PATH").unwrap_or("./recipes".into());
     let compiled_path = std::env::var("APP_COMPILED_PATH").unwrap_or("./compiled".into());
-    let compiler = Compiler::new(compiled_path.clone());
+    let compiler = Compiler::new(
+        &std::path::PathBuf::from_str(recipes_path.as_str()).expect("Failed to read recipes path"),
+        &std::path::PathBuf::from_str(compiled_path.as_str())
+            .expect("Failed to read compiled path"),
+    );
 
-    match get_recipes(recipes_path) {
-        Ok(recipes) => compiler
-            .compile_recipes(recipes)
-            .expect("Failed to compile recipes"),
-        Err(e) => {
-            println!("Get recipes failed {}", e);
-        }
-    }
+    compiler.build().expect("Failed to compile recipes");
+
     rocket::build()
         .mount("/", routes![index])
         .mount("/", FileServer::from(compiled_path))
